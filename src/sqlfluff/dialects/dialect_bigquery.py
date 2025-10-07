@@ -605,6 +605,7 @@ class FileSegment(BaseFileSegment):
     # NB: We don't need a match_grammar here because we're
     # going straight into instantiating it directly usually.
     match_grammar = Sequence(
+        AnyNumberOf(Ref("DelimiterGrammar")),
         Sequence(
             OneOf(
                 Ref("MultiStatementSegment"),
@@ -618,7 +619,7 @@ class FileSegment(BaseFileSegment):
                 Ref("StatementSegment"),
             ),
         ),
-        Ref("DelimiterGrammar", optional=True),
+        AnyNumberOf(Ref("DelimiterGrammar")),
     )
 
 
@@ -3128,7 +3129,21 @@ class CreateVectorIndexStatementSegment(BaseSegment):
                 Ref("IndexColumnDefinitionSegment"),
             ),
         ),
+        Ref("StoringSegment", optional=True),
         Ref("OptionsSegment"),
+    )
+
+
+class StoringSegment(BaseSegment):
+    """The `STORING` clause for a `CREATE VECTOR INDEX` statement.
+
+    https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_vector_index_statement
+    """
+
+    type = "storing_segment"
+    match_grammar: Matchable = Sequence(
+        "STORING",
+        Bracketed(Delimited(Ref("SingleIdentifierGrammar"))),
     )
 
 

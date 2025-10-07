@@ -198,6 +198,22 @@ snowflake_dialect.sets("warehouse_sizes").update(
     ],
 )
 
+snowflake_dialect.sets("resource_constraints").clear()
+snowflake_dialect.sets("resource_constraints").update(
+    [
+        "STANDARD_GEN_1",
+        "STANDARD_GEN_2",
+        "MEMORY_1X",
+        "MEMORY_1X_x86",
+        "MEMORY_16X",
+        "MEMORY_16X_x86",
+        "MEMORY_64X",
+        "MEMORY_64X_x86",
+        "MEMORY_256X",
+        "MEMORY_256X_x86",
+    ],
+)
+
 snowflake_dialect.sets("warehouse_scaling_policies").clear()
 snowflake_dialect.sets("warehouse_scaling_policies").update(
     [
@@ -304,6 +320,22 @@ snowflake_dialect.add(
             [f"'{size}'" for size in snowflake_dialect.sets("warehouse_sizes")],
             CodeSegment,
             type="warehouse_size",
+        ),
+    ),
+    ResourceConstraint=OneOf(
+        MultiStringParser(
+            [
+                size
+                for size in snowflake_dialect.sets("resource_constraints")
+                if "-" not in size
+            ],
+            CodeSegment,
+            type="resource_constraint",
+        ),
+        MultiStringParser(
+            [f"'{size}'" for size in snowflake_dialect.sets("resource_constraints")],
+            CodeSegment,
+            type="resource_constraint",
         ),
     ),
     RefreshModeType=OneOf(
@@ -3999,6 +4031,11 @@ class WarehouseObjectPropertiesSegment(BaseSegment):
             Ref("WarehouseSize"),
         ),
         Sequence(
+            "RESOURCE_CONSTRAINT",
+            Ref("EqualsSegment"),
+            Ref("ResourceConstraint"),
+        ),
+        Sequence(
             "WAIT_FOR_COMPLETION",
             Ref("EqualsSegment"),
             Ref("BooleanLiteralGrammar"),
@@ -5901,6 +5938,11 @@ class CsvFileFormatTypeParameters(BaseSegment):
             "COMPRESSION",
             Ref("EqualsSegment"),
             Ref("CompressionType"),
+        ),
+        Sequence(
+            "MULTI_LINE",
+            Ref("EqualsSegment"),
+            Ref("BooleanLiteralGrammar"),
         ),
         Sequence("FILE_EXTENSION", Ref("EqualsSegment"), Ref("QuotedLiteralSegment")),
         Sequence(
